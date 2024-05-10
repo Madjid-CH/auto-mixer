@@ -9,8 +9,8 @@ from torch import nn
 from torch.nn import CrossEntropyLoss
 from torchmetrics import F1Score
 
-import m2_mixer.modules as modules
-from m2_mixer.modules.train_test_module import AbstractTrainTestModule
+import auto_mixer.modules as modules
+from auto_mixer.modules.train_test_module import AbstractTrainTestModule
 
 try:
     from softadapt import LossWeightedSoftAdapt

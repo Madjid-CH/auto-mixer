@@ -1,25 +1,24 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from os import path
+from typing import List, Any, Optional
 
 import numpy as np
+import torch
 import wandb
+from auto_mixer.modules.gradblend import GradBlend
+from auto_mixer.modules.losses import EDLMSELoss
 from omegaconf import DictConfig
 from torch import nn
+from torch.nn import CrossEntropyLoss
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader, Subset
-
-from m2_mixer.modules.gradblend import GradBlend
-from m2_mixer.modules.losses import EDLMSELoss
-from m2_mixer.modules.train_test_module import AbstractTrainTestModule
-from m2_mixer.modules.mixer import MLPMixer
-
-import torch
-
-from typing import List, Any, Optional
-from torch.nn import CrossEntropyLoss
 from torchmetrics import Accuracy, F1Score, Precision, Recall
-import m2_mixer.modules as modules
+
+import auto_mixer.modules as modules
+from auto_mixer.modules.mixer import MLPMixer
+from auto_mixer.modules.train_test_module import AbstractTrainTestModule
+
 try:
     from softadapt import LossWeightedSoftAdapt
 except ModuleNotFoundError:

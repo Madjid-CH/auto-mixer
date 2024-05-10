@@ -1,8 +1,10 @@
-from m2_mixer.modules.classification import SequenceClassificationLayer, TokenClassificationLayer
-from m2_mixer.modules.mixer import PNLPMixer
-from omegaconf.dictconfig import DictConfig
 import torch
 import torch.nn as nn
+from auto_mixer.modules.classification import SequenceClassificationLayer, TokenClassificationLayer
+from omegaconf.dictconfig import DictConfig
+
+from auto_mixer.modules.mixer import PNLPMixer
+
 
 class PnlpMixerSeqCls(nn.Module):
     def __init__(

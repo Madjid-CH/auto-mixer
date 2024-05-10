@@ -9,8 +9,8 @@ from torch import nn
 from torch.nn import BCEWithLogitsLoss
 from torchmetrics import Accuracy, F1Score, Precision, Recall
 
-import m2_mixer.modules as modules
-from m2_mixer.modules.train_test_module import AbstractTrainTestModule
+import auto_mixer.modules as modules
+from auto_mixer.modules.train_test_module import AbstractTrainTestModule
 
 try:
     from softadapt import LossWeightedSoftAdapt

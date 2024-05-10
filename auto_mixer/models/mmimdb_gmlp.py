@@ -1,14 +1,13 @@
 from typing import List
 
 import torch
+from auto_mixer.modules.gmpl import VisiongMLP
 from omegaconf import DictConfig
 from torch.nn import BCEWithLogitsLoss
 from torchmetrics import F1Score
-
-from m2_mixer.modules.train_test_module import AbstractTrainTestModule
-from m2_mixer.modules.gmpl import VisiongMLP
-
 from torchvision.models import vgg19_bn
+
+from auto_mixer.modules.train_test_module import AbstractTrainTestModule
 
 
 class MMIDB_GMLP(AbstractTrainTestModule):

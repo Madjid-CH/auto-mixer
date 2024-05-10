@@ -3,6 +3,7 @@ from typing import Any, List, Optional
 
 import torch
 import wandb
+from auto_mixer.modules.gradblend import GradBlend
 from omegaconf import DictConfig
 from torch import nn
 from torch.nn import CrossEntropyLoss
@@ -10,9 +11,8 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader, Subset
 from torchmetrics import Accuracy, AveragePrecision, F1Score, Precision, Recall
 
-import m2_mixer.modules as modules
-from m2_mixer.modules.gradblend import GradBlend
-from m2_mixer.modules.train_test_module import AbstractTrainTestModule
+import auto_mixer.modules as modules
+from auto_mixer.modules.train_test_module import AbstractTrainTestModule
 
 try:
     from softadapt import LossWeightedSoftAdapt
