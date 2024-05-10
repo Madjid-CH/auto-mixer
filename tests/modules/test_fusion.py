@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from m2_mixer.modules import ConcatFusion, SumFusion, MaxFusion, MeanFusion, BiModalGatedUnit, MultiModalGatedUnit, \
+from auto_mixer.modules import ConcatFusion, SumFusion, MaxFusion, MeanFusion, BiModalGatedUnit, MultiModalGatedUnit, \
     ConcatDynaFusion
 
 

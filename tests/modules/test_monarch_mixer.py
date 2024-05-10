@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from m2_mixer.modules.monarch_mixer import MonarchMatrix, MonarchMixerLayer, MonarchMixer
+from auto_mixer.modules.monarch_mixer import MonarchMatrix, MonarchMixerLayer, MonarchMixer
 
 
 @pytest.fixture

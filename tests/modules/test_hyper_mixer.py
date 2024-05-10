@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from m2_mixer.modules.hyper_mixer import HyperMixing, HyperMixerBlock, HyperMixer, TextHyperMixer
+from auto_mixer.modules.hyper_mixer import HyperMixing, HyperMixerBlock, HyperMixer, TextHyperMixer
 
 
 @pytest.fixture

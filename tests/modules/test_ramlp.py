@@ -1,6 +1,6 @@
 import torch
 
-from m2_mixer.modules.ramlp import Downsampling, SepConv, MLP, RaBlock, RaMLP
+from auto_mixer.modules.ramlp import Downsampling, SepConv, MLP, RaBlock, RaMLP
 
 
 def test_downsampling():
