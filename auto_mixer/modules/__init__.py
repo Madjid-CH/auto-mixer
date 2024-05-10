@@ -1,18 +1,15 @@
 import sys
 
-from .classification import *
-from .cnns import *
-from .dynamixer import *
 from .fusion import *
-from .gmpl import *
 from .hyper_mixer import *
+from .image_module import MultilabelImageMixer, MulticlassImageMixer  # noqa: F401
 from .mixer import *
 from .mlp import *
 from .monarch_mixer import *
 from .ramlp import *
-from .recurrent import *
-from .wave_mlp import *
 from .strip_mlp import *
+from .text_module import MultilabelTextMixer, MulticlassTextMixer  # noqa: F401
+from .wave_mlp import *
 
 
 def get_block_by_name(**kwargs):
