@@ -24,7 +24,6 @@ pyyaml-include
 pytreebank
 
 pytest
-softadapt
 PyYAML
 gensim
 ipython
