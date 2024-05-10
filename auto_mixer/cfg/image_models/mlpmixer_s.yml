@@ -1,0 +1,12 @@
+# 20.9M
+dropout: 0.1
+modalities:
+  block_type: MLPMixer
+  image:
+    in_channels: 3
+    hidden_dim: 512
+    patch_size: 16
+    image_size: [ 224, 224 ]
+    token_dim: 256
+    channel_dim: 2048
+    num_mixers: 9
