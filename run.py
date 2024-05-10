@@ -8,7 +8,7 @@ import yaml
 from omegaconf import OmegaConf
 import yaml_include
 from auto_mixer import datasets
-import models
+from auto_mixer import models
 import wandb
 from auto_mixer.utils.utils import deep_update, todict
 
