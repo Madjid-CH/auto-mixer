@@ -1,21 +1,18 @@
 from abc import ABC, abstractmethod, ABCMeta
 
 import torch
-from omegaconf import DictConfig
 from pytorch_lightning.cli import ReduceLROnPlateau
 from torch import nn
 
-from auto_mixer import modules
-from auto_mixer.modules.mlp import TwoLayeredPerceptron
 from auto_mixer.modules.train_test_module import AbstractTrainTestModule
 from metrics import get_multiclass_metrics, get_multilabel_metrics
 
 
 class Mixer(AbstractTrainTestModule, ABC):
     def __init__(self, target_length, optimizer_cfg, **kwargs):
+        self.target_length = target_length
         super(Mixer, self).__init__(optimizer_cfg, **kwargs)
         self.optimizer_cfg = optimizer_cfg
-        self.target_length = target_length
         self.backbone = None
         self.classifier = None
 
@@ -40,23 +37,6 @@ class Mixer(AbstractTrainTestModule, ABC):
 
 
 class MulticlassMixer(Mixer, ABC):
-    def __init__(self, model_cfg: DictConfig, optimizer_cfg: DictConfig, **kwargs):
-        super(Mixer, self).__init__(optimizer_cfg, **kwargs)
-        model_cls = getattr(modules, model_cfg.modalities.block_type)
-        self.backbone = model_cls(**model_cfg.modalities.image, dropout=model_cfg.dropout)
-        self.classifier = TwoLayeredPerceptron(input_dim=512, hidden_dim=512, output_dim=self.target_length)
-
-    def shared_step(self, batch, **kwargs):
-        x, labels = batch
-        image_logits = self.get_logits(x)
-        loss = self.criterion(image_logits, labels.long())
-        preds = torch.argmax(image_logits, dim=1)
-        return {
-            'preds': preds,
-            'labels': labels,
-            'loss': loss,
-            'logits': image_logits
-        }
 
     @abstractmethod
     def get_logits(self, images):
@@ -74,27 +54,19 @@ class MulticlassMixer(Mixer, ABC):
         test_scores = get_multiclass_metrics(self.target_length)
         return [train_scores, val_scores, test_scores]
 
-
-class MultilabelMixer(Mixer, metaclass=ABCMeta):
-    def __init__(self, model_cfg: DictConfig, optimizer_cfg: DictConfig, **kwargs):
-        super(Mixer, self).__init__(optimizer_cfg, **kwargs)
-        model_cls = getattr(modules, model_cfg.modalities.block_type)
-        self.backbone = model_cls(**model_cfg.modalities.image, dropout=model_cfg.dropout)
-        self.classifier = TwoLayeredPerceptron(input_dim=512, hidden_dim=512, output_dim=self.target_length)
-
-    def shared_step(self, batch, **kwargs):
-        images, labels = batch
-        image_logits = self.get_logits(images)
-        loss = self.criterion(image_logits, labels.float())
-        threshold = 0.5
-        preds = torch.sigmoid(image_logits) > threshold
-        preds = preds.float()
+    def predict(self, x, labels):
+        logits = self.get_logits(x)
+        loss = self.criterion(logits, labels.long())
+        preds = torch.argmax(logits, dim=1)
         return {
             'preds': preds,
-            'labels': labels.long(),
+            'labels': labels,
             'loss': loss,
-            'logits': image_logits
+            'logits': logits
         }
+
+
+class MultilabelMixer(Mixer, metaclass=ABCMeta):
 
     @abstractmethod
     def get_logits(self, images):
@@ -111,3 +83,16 @@ class MultilabelMixer(Mixer, metaclass=ABCMeta):
         val_scores = get_multilabel_metrics(self.target_length)
         test_scores = get_multilabel_metrics(self.target_length)
         return [train_scores, val_scores, test_scores]
+
+    def predict(self, texts, labels):
+        logits = self.get_logits(texts)
+        loss = self.criterion(logits, labels.float())
+        threshold = 0.5
+        preds = torch.sigmoid(logits) > threshold
+        preds = preds.float()
+        return {
+            'preds': preds,
+            'labels': labels.long(),
+            'loss': loss,
+            'logits': logits
+        }

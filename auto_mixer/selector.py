@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 import torch
 from omegaconf import OmegaConf
 
-from auto_mixer.modules import MulticlassImageMixer, MultilabelImageMixer, MulticlassTextMixer, MultilabelTextMixer
+from auto_mixer.models import MulticlassImageMixer, MultilabelImageMixer, MulticlassTextMixer, MultilabelTextMixer
 
 
 def select_encoder_for(modality, task, train_dataloader, val_dataloader):
@@ -14,27 +14,33 @@ def select_encoder_for(modality, task, train_dataloader, val_dataloader):
 
 
 def select_image_encoder(task, train_dataloader, val_dataloader):
-    modules_configs_files = os.listdir("auto_mixer/cfg/image_models")
-    cfgs = [OmegaConf.load(cfg_file) for cfg_file in modules_configs_files]
-    train_cfg = OmegaConf.load("auto_mixer/cfg/micro_train.yml")
+    cfgs_path = "auto_mixer/cfg/image_models"
+    modules_configs_files = os.listdir(cfgs_path)
+    cfgs = [OmegaConf.load(f"{cfgs_path}/{cfg_file}") for cfg_file in modules_configs_files]
     Mixer = get_image_model_for(task)
-    target_length = len(train_dataloader.dataset[0]['labels'])
+    image_size = train_dataloader.dataset[0]['images'].shape[1:]
+    train_cfg = OmegaConf.load("auto_mixer/cfg/micro_train.yml")
     models = {
-        cfg.block_type: Mixer(
-            target_length=target_length, model_cfg=cfg, optimizer_cfg=train_cfg.optimzer
-        ) for cfg in cfgs
+        cfg.block_type: Mixer(image_size=image_size,
+                              target_length=train_dataloader.target_length,
+                              model_cfg=cfg,
+                              optimizer_cfg=train_cfg.optimizer
+                              ) for cfg in cfgs
     }
+    return benchmark(models, train_cfg, train_dataloader, val_dataloader)
+
+
+def benchmark(models, train_cfg, train_dataloader, val_dataloader):
     trainer = pl.Trainer(
         devices=torch.cuda.device_count(),
         log_every_n_steps=train_cfg.log_interval_steps,
         max_epochs=train_cfg.epochs
     )
-
-    for model in models.values():
+    for block_type, model in models.items():
+        print(f"Benchmarking {block_type} model...")
         trainer.fit(model, train_dataloader, val_dataloader)
-        results = trainer.test(model, val_dataloader)
+        results = trainer.test(model, val_dataloader)[0]
         model.results = results
-
     block_type, best_model = max(models.items(), key=lambda x: x[1].results['test_accuracy'])
     return block_type, best_model.backbone
 
@@ -49,29 +55,20 @@ def get_image_model_for(task):
 
 
 def select_text_encoder(task, train_dataloader, val_dataloader):
-    modules_configs_files = os.listdir("auto_mixer/cfg/text_models")
-    cfgs = [OmegaConf.load(cfg_file) for cfg_file in modules_configs_files]
+    cfgs_path = "auto_mixer/cfg/text_models"
+    modules_configs_files = os.listdir(cfgs_path)
+    cfgs = [OmegaConf.load(f"{cfgs_path}/{cfg_file}") for cfg_file in modules_configs_files]
     train_cfg = OmegaConf.load("auto_mixer/cfg/micro_train.yml")
     Mixer = get_text_model_for(task)
-    target_length = len(train_dataloader.dataset[0]['labels'])
+    patch_size, hidden_dim = train_dataloader.dataset[0]['texts'].shape
     models = {
         cfg.block_type: Mixer(
-            target_length=target_length, model_cfg=cfg, optimizer_cfg=train_cfg.optimzer
+            hidden_dim=hidden_dim, patch_size=patch_size,
+            target_length=train_dataloader.target_length, model_cfg=cfg,
+            optimizer_cfg=train_cfg.optimizer
         ) for cfg in cfgs
     }
-    trainer = pl.Trainer(
-        devices=torch.cuda.device_count(),
-        log_every_n_steps=train_cfg.log_interval_steps,
-        max_epochs=train_cfg.epochs
-    )
-
-    for model in models.values():
-        trainer.fit(model, train_dataloader, val_dataloader)
-        results = trainer.test(model, val_dataloader)
-        model.results = results
-
-    block_type, best_model = max(models.items(), key=lambda x: x[1].results['test_accuracy'])
-    return block_type, best_model.backbone
+    return benchmark(models, train_cfg, train_dataloader, val_dataloader)
 
 
 def get_text_model_for(task):
@@ -87,3 +84,9 @@ selectors = {
     'images': select_image_encoder,
     'texts': select_text_encoder,
 }
+
+
+def select_fusion_strategy(encoders, train_dataloader, val_dataloader):
+    modules_configs_files = os.listdir("auto_mixer/cfg/fusion_models")
+    cfgs = [OmegaConf.load(cfg_file) for cfg_file in modules_configs_files]
+    train_cfg = OmegaConf.load("auto_mixer/cfg/micro_train.yml")

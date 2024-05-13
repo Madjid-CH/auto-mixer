@@ -1,13 +1,12 @@
 #21.1m
 dropout: 0.1
-modalities:
-  block_type: RaMLP
-  image:
-    in_channels: 3
-    patch_size: 16
-    depths: [ 3, 3, 9, 3 ]
-    dims: [ 64, 128, 256, 512 ]
-    mlp_ratio: [ 4, 4, 3, 3 ]
-    expansion_ratio: [ 3, 3, 2, 2 ]
-    kernel_size: [ 8, 4, 2, 1 ]
-    head_dims: [ 1, 4, 16, 64 ]
+block_type: RaMLP
+image:
+  in_channels: 3
+  patch_size: 16
+  depths: [ 3, 3, 9, 3 ]
+  dims: [ 64, 128, 256, 512 ]
+  mlp_ratio: [ 4, 4, 3, 3 ]
+  expansion_ratio: [ 3, 3, 2, 2 ]
+  kernel_size: [ 8, 4, 2, 1 ]
+  head_dims: [ 1, 4, 16, 64 ]

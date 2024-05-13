@@ -2,13 +2,11 @@ import sys
 
 from .fusion import *
 from .hyper_mixer import *
-from .image_module import MultilabelImageMixer, MulticlassImageMixer  # noqa: F401
 from .mixer import *
-from .mlp import *
+from .mlp import TwoLayeredPerceptron  # noqa: F401
 from .monarch_mixer import *
 from .ramlp import *
 from .strip_mlp import *
-from .text_module import MultilabelTextMixer, MulticlassTextMixer  # noqa: F401
 from .wave_mlp import *
 
 

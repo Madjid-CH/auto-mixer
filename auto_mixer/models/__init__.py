@@ -2,13 +2,8 @@ import sys
 
 import pytorch_lightning as pl
 
-from .avmnist import *
-from .avmnist_post import *
-from .mimic import *
-from .mmhs150 import *
-from .mmimdb import *
-from .mmimdb_gmlp import *
-from .multioff import *
+from .image_module import MulticlassImageMixer, MultilabelImageMixer  # noqa: F401
+from .text_module import MulticlassTextMixer, MultilabelTextMixer  # noqa: F401
 
 
 def get_model(model_type: str) -> type[pl.LightningModule]:

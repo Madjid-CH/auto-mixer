@@ -5,7 +5,7 @@ from torch import nn
 
 
 class BiModalGatedUnit(nn.Module):
-    def __init__(self, mod1_in, mod2_in, out_size, **kwargs):
+    def __init__(self, mod1_in, mod2_in, out_size, **_kwargs):
         super(BiModalGatedUnit, self).__init__()
         self.out_size = out_size
         self.mod1_hidden = nn.Linear(mod1_in, out_size)
@@ -56,7 +56,7 @@ class BiModalGatedUnit(nn.Module):
 
 
 class MultiModalGatedUnit(nn.Module):
-    def __init__(self, n_modalities, in_shape, out_size=None, **kwargs):
+    def __init__(self, n_modalities, in_shape, out_size=None, **_kwargs):
         super(MultiModalGatedUnit, self).__init__()
         if out_size is None:
             out_size = in_shape
@@ -110,7 +110,7 @@ class MultiModalGatedUnit(nn.Module):
 
 
 class ConcatFusion:
-    def __init__(self, dim=1, **kwargs):
+    def __init__(self, dim=1, **_kwargs):
         self.dim = dim
 
     def __call__(self, *args):
@@ -147,7 +147,7 @@ class ConcatFusion:
 
 
 class ConcatDynaFusion:
-    def __init__(self, dim=1, **kwargs):
+    def __init__(self, dim=1, **_kwargs):
         self.dim = dim
 
     def __call__(self, *args):
@@ -222,7 +222,7 @@ class SumFusion:
 
 
 class ExtraConcatFusion:
-    def __init__(self, dim=1, **kwargs):
+    def __init__(self, dim=1, **_kwargs):
         self.dim = dim
 
     def __call__(self, *args):
@@ -263,7 +263,7 @@ class MeanFusion:
         return torch.mean(torch.stack(args), 0)
 
     @staticmethod
-    def get_output_shape(*args, dim=None, **kwargs):
+    def get_output_shape(*args, dim=None, **_kwargs):
         if dim is not None:
             if not isinstance(args[0], int):
                 raise ValueError("The dim argument is only used if the first argument is an int.")

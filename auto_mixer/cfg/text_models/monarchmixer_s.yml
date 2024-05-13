@@ -2,7 +2,6 @@
 dropout: 0.1
 block_type: MonarchMixer
 text:
-  hidden_dim: 768
-  patch_size: 512
   channel_dim: 4096
   num_mixers: 1605
+classifier_input_dim: 484

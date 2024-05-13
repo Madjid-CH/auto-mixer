@@ -1,5 +1,5 @@
 tensorboard_path: ./logs/
-log_interval_steps: 5
+log_interval_steps: 2
 epochs: 10
 optimizer:
   lr: 1e-4

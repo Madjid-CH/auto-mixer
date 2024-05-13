@@ -1,10 +1,7 @@
 #20.042M
 dropout: 0.1
-modalities:
-  block_type: TextMLPMixer
-  text:
-    hidden_dim: 768
-    patch_size: 512
-    token_dim: 256
-    channel_dim: 2048
-    num_mixers: 72
+block_type: TextMLPMixer
+text:
+  token_dim: 256
+  channel_dim: 2048
+  num_mixers: 72

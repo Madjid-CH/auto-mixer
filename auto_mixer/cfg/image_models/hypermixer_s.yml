@@ -5,7 +5,6 @@ image:
   in_channels: 3
   hidden_dim: 512
   patch_size: 16
-  image_size: [ 224, 224 ]
   channel_dim: 2048
   num_mixers: 9
   num_heads: 2
