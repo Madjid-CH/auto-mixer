@@ -6,7 +6,7 @@ from pytorch_lightning.cli import ReduceLROnPlateau
 from torch import nn
 
 from auto_mixer import modules
-from auto_mixer.modules import TwoLayeredPerceptron
+from auto_mixer.modules.mlp import TwoLayeredPerceptron
 from auto_mixer.modules.train_test_module import AbstractTrainTestModule
 from metrics import get_multiclass_metrics, get_multilabel_metrics
 
