@@ -1,0 +1,10 @@
+#20.894M
+dropout: 0.1
+modalities:
+  block_type: TextHyperMixer
+  text:
+    hidden_dim: 768
+    patch_size: 512
+    channel_dim: 1900
+    num_mixers: 7
+    num_heads: 2
