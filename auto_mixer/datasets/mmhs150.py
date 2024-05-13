@@ -4,15 +4,15 @@ from typing import List
 
 # import gensim
 import numpy as np
+import pytorch_lightning as pl
+import torchvision.transforms as T
 from PIL import Image
 from omegaconf import DictConfig
 from tokenizers.implementations import BertWordPieceTokenizer
 from torch.utils.data import Dataset, DataLoader
-import pytorch_lightning as pl
-import torchvision.transforms as T
 from torchvision.transforms import InterpolationMode
 
-from m2_mixer.utils.projection import Projection
+from auto_mixer.utils.projection import Projection
 
 
 class MMHS150DataModule(pl.LightningDataModule):

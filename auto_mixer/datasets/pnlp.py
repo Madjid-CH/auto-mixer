@@ -1,12 +1,14 @@
-from m2_mixer.utils.projection import Projection
+from pathlib import Path
+from typing import Any, Dict, List
+
 import numpy as np
 import pytorch_lightning as pl
 from omegaconf.dictconfig import DictConfig
-from pathlib import Path
-from torch.utils.data import Dataset, DataLoader
 from tokenizers import Tokenizer
 from tokenizers.implementations import BertWordPieceTokenizer, SentencePieceBPETokenizer, SentencePieceUnigramTokenizer
-from typing import Any, Dict, List
+from torch.utils.data import Dataset, DataLoader
+
+from auto_mixer.utils.projection import Projection
 
 
 class PnlpMixerDataModule(pl.LightningDataModule):

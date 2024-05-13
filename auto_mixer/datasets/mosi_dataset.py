@@ -1,19 +1,19 @@
 """Implements dataloaders for AFFECT data."""
 import os
+import pickle
 import sys
 from typing import *
-import pickle
+
 import h5py
 import numpy as np
-import torch
 import pytorch_lightning as pl
+import torch
 from omegaconf import DictConfig
 from tokenizers.implementations import BertWordPieceTokenizer
-
 from torch.nn import functional as F
 from torch.utils.data import DataLoader, Dataset
 
-from m2_mixer.utils.projection import Projection
+from auto_mixer.utils.projection import Projection
 
 sys.path.append(os.getcwd())
 np.seterr(divide='ignore', invalid='ignore')

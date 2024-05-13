@@ -9,7 +9,7 @@ import torch
 from einops.layers.torch import Rearrange
 from torch import nn
 
-from m2_mixer.modules.mixer import FeedForward
+from auto_mixer.modules.mixer import FeedForward
 
 
 class HyperMixer(nn.Module):
