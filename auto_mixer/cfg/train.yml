@@ -1,0 +1,23 @@
+tensorboard_path: ./logs/
+log_interval_steps: 10
+epochs: 300
+optimizer:
+  lr: 1e-4
+  betas: [ 0.9, 0.999 ]
+  eps: 1e-8
+  weight_decay: 0.01
+seed: 42
+monitor: val_loss
+monitor_mode: min
+callbacks:
+  - class_path: pytorch_lightning.callbacks.EarlyStopping
+    init_args:
+      monitor: 'val_loss'
+      patience: 10
+      mode: 'min'
+  - class_path: pytorch_lightning.callbacks.ModelCheckpoint
+    init_args:
+      monitor: 'val_loss'
+      save_last: True
+      save_top_k: 5
+      mode: 'min'

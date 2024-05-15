@@ -5,12 +5,13 @@ from torch.utils.data import Subset, DataLoader
 from auto_mixer.selector import select_encoder_for, select_fusion_strategy
 
 
-def train(datamodule: pl.LightningDataModule):
+def find_architecture(datamodule: pl.LightningDataModule):
     sampled_train_dataloader = sample_data(datamodule)
     val_dataloader = datamodule.val_dataloader()
     sampled_train_dataloader.target_length = datamodule.target_length
     encoders = select_encoders(sampled_train_dataloader, val_dataloader)
-    fusion_strategy = select_fusion_strategy(encoders, sampled_train_dataloader, val_dataloader)
+    best_model = select_fusion_strategy(encoders, sampled_train_dataloader, val_dataloader)
+    return best_model
 
 
 def sample_data(dataloader):

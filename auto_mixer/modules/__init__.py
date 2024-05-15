@@ -1,5 +1,6 @@
 import sys
 
+from .classification import StandardClassifier  # noqa: F401
 from .fusion import *
 from .hyper_mixer import *
 from .mixer import *
