@@ -88,14 +88,15 @@ selectors = {
 
 
 def select_fusion_strategy(encoders, train_dataloader, val_dataloader):
-    modules_configs_files = os.listdir("auto_mixer/cfg/fusion_models")
-    cfgs = [OmegaConf.load(cfg_file) for cfg_file in modules_configs_files]
+    cfgs_path = "auto_mixer/cfg/fusion_models"
+    modules_configs_files = os.listdir(cfgs_path)
+    cfgs = [OmegaConf.load(f"{cfgs_path}/{cfg_file}") for cfg_file in modules_configs_files]
     train_cfg = OmegaConf.load("auto_mixer/cfg/micro_train.yml")
     sample = train_dataloader.dataset[0]
     task = "multiclass" if len(sample['labels']) == 1 else "multilabel"
     Mixer = get_multimodal_model_for(task)
     models = {
-        cfg.modalities.fusion_function: Mixer(
+        cfg.multimodal.fusion_function: Mixer(
             encoders=encoders,
             target_length=train_dataloader.target_length,
             model_cfg=cfg,

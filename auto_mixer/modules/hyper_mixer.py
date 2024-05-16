@@ -19,6 +19,7 @@ class HyperMixer(nn.Module):
 
         _check_image_dimensions_divisible_by_patch_size(image_size, patch_size)
         self.num_patch = (image_size[0] // patch_size) * (image_size[1] // patch_size)
+        self.hidden_dim = hidden_dim
         self.to_patch_embedding = nn.Sequential(
             nn.Conv2d(in_channels, hidden_dim, patch_size, patch_size),
             Rearrange('b c h w -> b (h w) c'),
@@ -401,6 +402,7 @@ class TextHyperMixer(nn.Module):
                  **_kwargs):
         super().__init__()
         self.num_patch = patch_size
+        self.hidden_dim = hidden_dim
         self.mixer_blocks = nn.ModuleList([])
         for _ in range(num_mixers):
             self.mixer_blocks.append(

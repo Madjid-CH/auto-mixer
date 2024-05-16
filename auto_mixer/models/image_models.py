@@ -12,6 +12,7 @@ class MultilabelImageMixer(MultilabelMixer):
         model_cls = getattr(modules, model_cfg.block_type)
         self.backbone = model_cls(image_size=image_size, **model_cfg.image, dropout=model_cfg.dropout)
         classifier_input_dim = model_cfg.get('classifier_input_dim', 512)
+        self.backbone.classifier_input_dim = classifier_input_dim
         self.classifier = TwoLayeredPerceptron(input_dim=classifier_input_dim, hidden_dim=512,
                                                output_dim=self.target_length)
 
@@ -32,7 +33,10 @@ class MulticlassImageMixer(MulticlassMixer):
         super(MulticlassMixer, self).__init__(target_length=target_length, optimizer_cfg=optimizer_cfg, **kwargs)
         model_cls = getattr(modules, model_cfg.block_type)
         self.backbone = model_cls(image_size=image_size, **model_cfg.image, dropout=model_cfg.dropout)
-        self.classifier = TwoLayeredPerceptron(input_dim=512, hidden_dim=512, output_dim=self.target_length)
+        classifier_input_dim = model_cfg.get('classifier_input_dim', 512)
+        self.backbone.classifier_input_dim = classifier_input_dim
+        self.classifier = TwoLayeredPerceptron(input_dim=classifier_input_dim, hidden_dim=512,
+                                               output_dim=self.target_length)
 
     def get_logits(self, images):
         logits = self.backbone(images)

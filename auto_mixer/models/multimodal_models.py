@@ -12,15 +12,15 @@ from auto_mixer.modules.train_test_module import AbstractTrainTestModule
 
 class MultiClassMultiLoss(AbstractTrainTestModule):
     def __init__(self, encoders, target_length, model_cfg: DictConfig, optimizer_cfg: DictConfig, **kwargs):
+        self.target_length = target_length
         super(MultiClassMultiLoss, self).__init__(optimizer_cfg, log_confusion_matrix=True, **kwargs)
         self.optimizer_cfg = optimizer_cfg
         self.scheduler_patience = optimizer_cfg.pop('scheduler_patience', 5)
         multimodal_config = model_cfg.multimodal
         dropout = model_cfg.get('dropout', 0.0)
         self.encoders = MultiClassMultiLoss._build_encoders(encoders)
-        self.fusion_function = modules.get_fusion_by_name(**model_cfg.modalities.multimodal)
-        num_patches = self.fusion_function.get_output_shape(self.image_mixer.num_patch, self.audio_mixer.num_patch,
-                                                            dim=1)
+        self.fusion_function = modules.get_fusion_by_name(**model_cfg.multimodal)
+        num_patches = self.fusion_function.get_output_shape(*[v.num_patch for v in self.encoders.values()], dim=1)
         self.fusion_mixer = modules.get_block_by_name(**multimodal_config, num_patches=num_patches, dropout=dropout)
         self.classifiers = {k: torch.nn.Linear(v.hidden_dim, target_length)
                             for k, v in self.encoders.items()}
@@ -118,18 +118,17 @@ class MultiClassMultiLoss(AbstractTrainTestModule):
 
 class MultiLabelMultiLoss(AbstractTrainTestModule):
     def __init__(self, encoders, target_length, model_cfg: DictConfig, optimizer_cfg: DictConfig, **kwargs):
+        self.target_length = target_length
         super(MultiLabelMultiLoss, self).__init__(optimizer_cfg, log_confusion_matrix=True, **kwargs)
         self.optimizer_cfg = optimizer_cfg
         self.scheduler_patience = optimizer_cfg.pop('scheduler_patience', 5)
         multimodal_config = model_cfg.multimodal
         dropout = model_cfg.get('dropout', 0.0)
         self.encoders = MultiLabelMultiLoss._build_encoders(encoders)
-        self.fusion_function = modules.get_fusion_by_name(**model_cfg.modalities.multimodal)
-        num_patches = self.fusion_function.get_output_shape(self.image_mixer.num_patch, self.audio_mixer.num_patch,
-                                                            dim=1)
+        self.fusion_function = modules.get_fusion_by_name(**model_cfg.multimodal)
+        num_patches = self.fusion_function.get_output_shape(*[v.num_patch for v in self.encoders.values()], dim=1)
         self.fusion_mixer = modules.get_block_by_name(**multimodal_config, num_patches=num_patches, dropout=dropout)
-        self.classifiers = {k: torch.nn.Linear(v.hidden_dim, target_length)
-                            for k, v in self.encoders.items()}
+        self.classifiers = self._build_classifiers(target_length)
         self.classifier_fusion = StandardClassifier(input_shape=(16, 49, 256), num_classes=target_length)
 
         self.criteria = {k: nn.BCEWithLogitsLoss() for k in self.encoders.keys()}
@@ -138,12 +137,15 @@ class MultiLabelMultiLoss(AbstractTrainTestModule):
         self.fusion_loss_change = 0
         self.loss_change_epoch = 0
 
+    def _build_classifiers(self, target_length):
+        return {k: torch.nn.Linear(v.classifier_input_dim, target_length)
+                for k, v in self.encoders.items()}
+
     @staticmethod
     def _build_encoders(encoders):
         return {k: v[1] for k, v in encoders.items()}
 
     def shared_step(self, batch, **kwargs):
-
         labels = batch['labels']
 
         logits = {

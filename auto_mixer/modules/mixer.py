@@ -1,8 +1,8 @@
 
-import torch
 import numpy as np
-from torch import nn
+import torch
 from einops.layers.torch import Rearrange
+from torch import nn
 
 
 class FeedForward(nn.Module):
@@ -139,6 +139,7 @@ class MLPMixer(nn.Module):
         assert (image_size[0] % patch_size == 0) and (
                 image_size[1] % patch_size == 0), 'Image dimensions must be divisible by the patch size.'
         self.num_patch = (image_size[0] // patch_size) * (image_size[1] // patch_size)
+        self.hidden_dim = hidden_dim
         self.to_patch_embedding = nn.Sequential(
             nn.Conv2d(in_channels, hidden_dim, patch_size, patch_size),
             Rearrange('b c h w -> b (h w) c'),
@@ -274,6 +275,7 @@ class TextMLPMixer(nn.Module):
                  **_kwargs):
         super().__init__()
         self.num_patch = patch_size
+        self.hidden_dim = hidden_dim
         self.mixer_blocks = nn.ModuleList([])
         for _ in range(num_mixers):
             self.mixer_blocks.append(

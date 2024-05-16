@@ -69,6 +69,8 @@ class MonarchMixer(nn.Module):
         super().__init__()
         self.sqrt_n = int(patch_size ** 0.5)
         self.sqrt_d = int(hidden_dim ** 0.5)
+        self.hidden_dim = self.sqrt_d ** 2
+        self.num_patch = self.sqrt_n ** 2
         self.layers = nn.ModuleList([MonarchMixerLayer(self.sqrt_n, self.sqrt_d) for _ in range(num_mixers)])
 
     def forward(self, x: torch.Tensor):
