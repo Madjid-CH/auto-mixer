@@ -1,6 +1,7 @@
 import math
 
 import torch
+import torch.nn.functional as F
 from torch import nn
 
 
@@ -114,6 +115,7 @@ class ConcatFusion:
         self.dim = dim
 
     def __call__(self, *args):
+        args = pad_tensors(args)
         return torch.cat(args, dim=self.dim)
 
     def get_output_shape(self, *args, dim=None):
@@ -144,6 +146,15 @@ class ConcatFusion:
         for arg in args[1:]:
             shape[self.dim] += arg[self.dim]
         return tuple(shape)
+
+
+def pad_tensors(args):
+    max_size = max(arg.size(2) for arg in args)
+    padded_tensors = []
+    for tensor in args:
+        padding = (0, max_size - tensor.size(2))
+        padded_tensors.append(F.pad(tensor, padding))
+    return padded_tensors
 
 
 class ConcatDynaFusion:
