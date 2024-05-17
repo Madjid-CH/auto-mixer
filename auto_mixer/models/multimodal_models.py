@@ -143,7 +143,7 @@ class MultiLabelMultiLoss(AbstractTrainTestModule):
 
     @staticmethod
     def _build_encoders(encoders):
-        return {k: v[1] for k, v in encoders.items()}
+        return {k: v[1].cuda() for k, v in encoders.items()}
 
     def shared_step(self, batch, **kwargs):
         labels = batch['labels']
