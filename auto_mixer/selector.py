@@ -42,7 +42,7 @@ def benchmark(models, train_cfg, train_dataloader, val_dataloader):
         trainer.fit(model, train_dataloader, val_dataloader)
         results = trainer.test(model, val_dataloader)[0]
         model.results = results
-    block_type, best_model = max(models.items(), key=lambda x: x[1].results['test_accuracy'])
+    block_type, best_model = max(models.items(), key=lambda x: x[1].results['test_f1_micro'])
     return block_type, best_model.backbone
 
 
@@ -129,5 +129,5 @@ def benchmark_fusion(models, train_cfg, train_dataloader, val_dataloader):
         trainer.fit(model, train_dataloader, val_dataloader)
         results = trainer.test(model, val_dataloader)[0]
         model.results = results
-    fusion_function, best_model = max(models.items(), key=lambda x: x[1].results['test_accuracy'])
+    fusion_function, best_model = max(models.items(), key=lambda x: x[1].results['test_f1_micro'])
     return fusion_function, best_model
