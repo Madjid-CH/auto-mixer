@@ -4,4 +4,4 @@ block_type: TextMLPMixer
 text:
   token_dim: 256
   channel_dim: 2048
-  num_mixers: 72
+  num_mixers: 22
