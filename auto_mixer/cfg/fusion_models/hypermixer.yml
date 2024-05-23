@@ -5,7 +5,6 @@ classification:
 multimodal:
   block_type: TextHyperMixer
   fusion_function: ConcatFusion
-  hidden_dim: 729
   channel_dim: 3072
   num_mixers: 4
   num_heads: 1

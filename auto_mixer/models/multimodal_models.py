@@ -22,9 +22,12 @@ class MultiLabelMultiLoss(AbstractTrainTestModule):
         self.fusion_function = modules.get_fusion_by_name(**model_cfg.multimodal)
 
         num_patches = self.fusion_function.get_output_shape(*[v.num_patch for v in self.encoders.values()], dim=1)
-        self.fusion_mixer = modules.get_block_by_name(**multimodal_config, num_patches=num_patches, dropout=dropout)
+        hidden_dim = max([v.hidden_dim for v in self.encoders.values()])
+        self.fusion_mixer = modules.get_block_by_name(**multimodal_config, hidden_dim=hidden_dim,
+                                                      num_patches=num_patches, dropout=dropout)
         self.classifiers = self._build_classifiers(target_length)
-        self.classifier_fusion = StandardClassifier(input_shape=(16, 49, 729), num_classes=target_length)
+        self.classifier_fusion = StandardClassifier(input_shape=(16, 49, self._classifier_input_dim),
+                                                    num_classes=target_length)
 
         self.criteria = {k: nn.BCEWithLogitsLoss() for k in self.encoders.keys()}
         self.fusion_criterion = nn.BCEWithLogitsLoss()
@@ -33,12 +36,21 @@ class MultiLabelMultiLoss(AbstractTrainTestModule):
         self.loss_change_epoch = 0
 
     def _build_classifiers(self, target_length):
-        return {'images': nn.Linear(in_features=512, out_features=23, bias=True).cuda(),
-                'texts': nn.Linear(in_features=729, out_features=23, bias=True).cuda()}
+        with torch.no_grad():
+            input_dims = {"images": self.encoders["images"](torch.rand(1, 3, 256, 256).cuda()),
+                          "texts": self.encoders["texts"](torch.rand(1, 512, 768).cuda())}
+        self._classifier_input_dim = max(v.shape[-1] for v in input_dims.values())
+        print(f"{self._classifier_input_dim=}")
+        input_dims = {k: v.shape[-1] for k, v in input_dims.items()}
+
+        return nn.ModuleDict(
+            {k: nn.Linear(in_features=input_dims[k], out_features=target_length, bias=True).cuda()
+             for k in self.encoders.keys()}
+        )
 
     @staticmethod
     def _build_encoders(encoders):
-        return {k: v[1].cuda() for k, v in encoders.items()}
+        return nn.ModuleDict({k: v[1].cuda() for k, v in encoders.items()})
 
     def shared_step(self, batch, **kwargs):
         labels = torch.tensor(batch['labels']).float().cuda()
