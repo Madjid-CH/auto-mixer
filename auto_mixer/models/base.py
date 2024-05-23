@@ -5,7 +5,7 @@ from pytorch_lightning.cli import ReduceLROnPlateau
 from torch import nn
 
 from auto_mixer.modules.train_test_module import AbstractTrainTestModule
-from metrics import get_multiclass_metrics, get_multilabel_metrics
+from auto_mixer.metrics import get_multiclass_metrics, get_multilabel_metrics
 
 
 class Mixer(AbstractTrainTestModule, ABC):
