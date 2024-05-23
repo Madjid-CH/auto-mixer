@@ -3,5 +3,5 @@ dropout: 0.1
 block_type: MonarchMixer
 text:
   channel_dim: 4096
-  num_mixers: 1605
+  num_mixers: 45
 classifier_input_dim: 484

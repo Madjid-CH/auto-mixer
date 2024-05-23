@@ -1,0 +1,11 @@
+classification:
+  classifier: StandardClassifier
+  input_shape: [ 16, 49, 729 ]
+  hidden_dims: [ 1024, 512, 256, 32 ]
+multimodal:
+  block_type: TextHyperMixer
+  fusion_function: ConcatFusion
+  hidden_dim: 729
+  channel_dim: 3072
+  num_mixers: 4
+  num_heads: 1

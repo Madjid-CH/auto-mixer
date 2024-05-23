@@ -1,11 +1,11 @@
 classification:
   classifier: StandardClassifier
-  input_shape: [ 16, 49, 256 ]
+  input_shape: [ 16, 49, 729 ]
   hidden_dims: [ 1024, 512, 256, 32 ]
 multimodal:
   block_type: FusionMixer
   fusion_function: ConcatFusion
-  hidden_dim: 256
+  hidden_dim: 729
   token_dim: 32
   channel_dim: 3072
   num_mixers: 2

@@ -395,13 +395,14 @@ class TextHyperMixer(nn.Module):
     def __init__(self,
                  hidden_dim,
                  num_mixers,
-                 patch_size,
                  channel_dim,
+                 patch_size=None,
+                 num_patches=None,
                  num_heads=1,
                  dropout=0.,
                  **_kwargs):
         super().__init__()
-        self.num_patch = patch_size
+        self.num_patch = patch_size if patch_size is not None else num_patches
         self.hidden_dim = hidden_dim
         self.mixer_blocks = nn.ModuleList([])
         for _ in range(num_mixers):

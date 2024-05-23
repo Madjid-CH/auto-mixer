@@ -284,6 +284,7 @@ class StripMLP(nn.Module):
         self.num_features = int(embeddings_dim * 2 ** (self.num_layers - 1))
         self.patch_norm = patch_norm
         self.dropout = dropout
+        self.num_patch = (image_size[0] // patch_size) * (image_size[1] // patch_size)
 
         self.patch_embed = nn.Conv2d(in_channels, embeddings_dim, patch_size, patch_size, bias=False)
 

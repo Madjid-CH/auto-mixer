@@ -3,10 +3,10 @@ import time
 from typing import List, Dict, Any
 
 import numpy as np
+import pytorch_lightning as pl
 import torch
 import wandb
 from omegaconf import DictConfig
-import pytorch_lightning as pl
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import Metric
 
@@ -135,15 +135,6 @@ class AbstractTrainTestModule(pl.LightningModule, abc.ABC):
                 for metric in self.val_scores:
                     val_score = self.val_scores[metric].compute()
                     wandb.run.summary[f'best_val_{metric}'] = val_score
-        if self.log_confusion_matrix:
-            preds = torch.cat([output['preds'].cpu() for output in self.validation_step_outputs])
-            labs = torch.cat([output['labels'].cpu() for output in self.validation_step_outputs])
-            wandb.log({'conf_mat': wandb.plot.confusion_matrix(
-                probs=None,
-                y_true=labs.long().cpu().numpy(),
-                preds=preds.long().cpu().numpy(),
-                class_names=range(max(preds.long().max().item(), labs.max().item()) + 1),
-            )})
 
     def test_step(self, batch, batch_idx):
         self.log_n_parameters()
@@ -169,15 +160,6 @@ class AbstractTrainTestModule(pl.LightningModule, abc.ABC):
                 test_score = self.test_scores[metric].compute()
                 wandb.log({f'test_{metric}': test_score})
                 self.log(f'test_{metric}', test_score, prog_bar=True, logger=True, sync_dist=True)
-        if self.log_confusion_matrix:
-            preds = torch.cat([output['preds'].cpu() for output in self.test_step_outputs])
-            labs = torch.cat([output['labels'].cpu() for output in self.test_step_outputs])
-            wandb.log({'conf_mat': wandb.plot.confusion_matrix(
-                probs=None,
-                y_true=labs.long().cpu().numpy(),
-                preds=preds.long().cpu().numpy(),
-                class_names=range(max(preds.max().item(), labs.max().item()) + 1),
-            )})
 
     def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> Any:
         results = self.shared_step(batch)

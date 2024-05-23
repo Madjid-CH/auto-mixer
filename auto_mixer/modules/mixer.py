@@ -110,7 +110,7 @@ class MultimodalFusionMixer(nn.Module):
 
 class FusionMixer(nn.Module):
     def __init__(self, hidden_dim, num_patches, num_mixers, token_dim, channel_dim,
-                 dropout=0., **kwargs):
+                 dropout=0., **_kwargs):
         super().__init__()
 
         self.num_patch = num_patches

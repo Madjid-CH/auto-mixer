@@ -11,23 +11,24 @@ from auto_mixer.runner import find_architecture
 
 def main():
     wandb.init(project='auto-mixer', name='test', mode='disabled')
-    data = MMIMDBDataModule(batch_size=32, num_workers=4, max_seq_len=512,
+    data = MMIMDBDataModule(batch_size=64, num_workers=4, max_seq_len=512,
                             dataset_cls_name="MMIMDBDatasetWithEmbeddings")
     data.setup()
     fusion_function, best_model = find_architecture(data)
     cfg = OmegaConf.load("auto_mixer/cfg/train.yml")
-    train_cfg = cfg.train
-    callbacks = build_callbacks(train_cfg.callbacks)
+    callbacks = build_callbacks(cfg.callbacks)
     trainer = pl.Trainer(
         callbacks=callbacks,
         devices=torch.cuda.device_count(),
-        log_every_n_steps=train_cfg.log_interval_steps,
-        logger=pl.loggers.TensorBoardLogger(train_cfg.tensorboard_path, "pipeline"),
-        max_epochs=train_cfg.epochs
+        log_every_n_steps=cfg.log_interval_steps,
+        logger=pl.loggers.TensorBoardLogger(cfg.tensorboard_path, "pipeline"),
+        max_epochs=cfg.epochs
     )
 
     train_dataloader = data.train_dataloader()
     val_dataloader = data.val_dataloader()
+    print("\nStarting full training...\n")
+    print(best_model)
     trainer.fit(best_model, train_dataloader, val_dataloader)
     results = trainer.test(best_model, val_dataloader)[0]
     print(results)

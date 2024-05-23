@@ -96,7 +96,7 @@ def select_fusion_strategy(encoders, train_dataloader, val_dataloader):
     task = "multiclass" if len(sample['labels']) == 1 else "multilabel"
     Mixer = get_multimodal_model_for(task)
     models = {
-        cfg.multimodal.fusion_function: Mixer(
+        cfg.multimodal.block_type: Mixer(
             encoders=encoders,
             target_length=train_dataloader.target_length,
             model_cfg=cfg,
@@ -122,6 +122,8 @@ def benchmark_fusion(models, train_cfg, train_dataloader, val_dataloader):
         log_every_n_steps=train_cfg.log_interval_steps,
         max_epochs=train_cfg.epochs
     )
+    print("\nStarting fusion strategy selection...\n")
+    print(len(models))
     for fusion_function, model in models.items():
         print(f"Benchmarking {fusion_function}...")
         trainer.fit(model, train_dataloader, val_dataloader)

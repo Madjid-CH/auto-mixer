@@ -1,4 +1,3 @@
-
 import torch
 import torch.nn.functional as F
 
@@ -8,7 +7,7 @@ class ConcatFusion:
         self.dim = dim
 
     def __call__(self, *args):
-        args = pad_tensors(args)
+        args = pad_tensors_on_third_dim(args)
         return torch.cat(args, dim=self.dim)
 
     def get_output_shape(self, *args, dim=None):
@@ -41,7 +40,8 @@ class ConcatFusion:
         return tuple(shape)
 
 
-def pad_tensors(args):
+def pad_tensors_on_third_dim(args):
+    print([arg.shape for arg in args])
     max_size = max(arg.size(2) for arg in args)
     padded_tensors = []
     for tensor in args:
@@ -55,6 +55,7 @@ class MaxFusion:
         pass
 
     def __call__(self, *args):
+        args = pad_on_second_and_third_dim(args)
         return torch.maximum(*args)
 
     @staticmethod
@@ -67,11 +68,22 @@ class MaxFusion:
         return args[0]
 
 
+def pad_on_second_and_third_dim(args):
+    max_size_dim1 = max(arg.size(1) for arg in args)
+    max_size_dim2 = max(arg.size(2) for arg in args)
+    padded_tensors = []
+    for tensor in args:
+        padding = (0, max_size_dim1 - tensor.size(1), 0, max_size_dim2 - tensor.size(2))
+        padded_tensors.append(F.pad(tensor, padding, value=0))
+    return padded_tensors
+
+
 class SumFusion:
     def __init__(self, **kwargs):
         pass
 
     def __call__(self, *args):
+        args = pad_on_second_and_third_dim(args)
         return torch.add(*args)
 
     @staticmethod
@@ -89,6 +101,7 @@ class MeanFusion:
         pass
 
     def __call__(self, *args):
+        args = pad_on_second_and_third_dim(args)
         return torch.mean(torch.stack(args), 0)
 
     @staticmethod

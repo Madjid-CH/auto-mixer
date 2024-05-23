@@ -68,7 +68,7 @@ def test_hyper_mixer():
 
 
 def test_text_hyper_mixer_forward():
-    model = TextHyperMixer(hidden_dim=768, num_mixers=2, patch_size=512, channel_dim=128)
+    model = TextHyperMixer(hidden_dim=768, num_mixers=2, num_patch=512, channel_dim=128)
     input_tensor = torch.rand(10, 512, 768)
     output = model(input_tensor)
     assert output.shape == (10, 512, 768)
