@@ -64,6 +64,8 @@ class MultiLabelMultiLoss(AbstractTrainTestModule):
         logits = {k: v.mean(dim=1) for k, v in logits.items()}
         logits = {k: self.classifiers[k](v) for k, v in logits.items()}
         fused_logits = self.classifier_fusion(fused_logits)
+        fused_logits += sum([v for v in logits.values()])
+        fused_logits /= (len(self.encoders) + 1)
 
         losses = {
             k: self.criteria[k](v, labels) for k, v in logits.items()
