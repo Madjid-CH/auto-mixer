@@ -13,6 +13,7 @@
     * [Prerequisites](#prerequisites)
     * [Installation](#installation)
 * [Usage](#usage)
+* [Hyperparameters](#hyperparameters)
 
 ## About The Project
 
@@ -46,5 +47,16 @@ pip install -r requirements.txt
 python run.py
 ```
 
+## Hyperparameters
 
+We compare MixMAS's performance against M2-Mixer. The hyperparameters of M2-Mixer are as follows:
 
+| Dataset   | Hidden Dim. | Patch Sizes         | Token Dim. | Channel Dim. | Blocks (modality 1/ modality 2 / Fusion) | Params (M) |
+|-----------|-------------|---------------------|------------|--------------|------------------------------------------|------------|
+| MM-IMDB   | 256         | 16 Image / 512 Text | 32         | 3072         | 4 / 4 / 2                                | 16.7       |
+| AV-MNIST  | 128         | 14 Image / 56 Audio | 32         | 3072         | 4 / 4 / 2                                | 8.3        |
+| MIMIC-III | 64          | 24 Time-series / -  | 16         | 64           | 1 / 2 / 1                                | 0.029      |
+
+All the blocks in the M2-Mixer are MLP-Mixer blocks.
+For MixMAS,
+the hyperparameters are the same except for the type of the blocks that will be selected during the micro benchmarking.
