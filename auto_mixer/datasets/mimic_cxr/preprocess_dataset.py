@@ -2,11 +2,12 @@ import re
 
 import pandas as pd
 import torch
-from transformers import BertTokenizer, BertModel
+from transformers import AutoTokenizer
+from transformers import BertModel
 
 ROOT_DIR = "/scratch/achergui/data/mimic-cxr"
 
-tokenizer = BertTokenizer.from_pretrained('microsoft/BiomedVLP-CXR-BERT-general')
+tokenizer = AutoTokenizer.from_pretrained("microsoft/BiomedVLP-CXR-BERT-general")
 MAX_SEQ_LEN = 301
 
 
