@@ -5,10 +5,12 @@ import torch
 from transformers import AutoTokenizer
 from transformers import BertModel
 
-ROOT_DIR = "/scratch/achergui/data/mimic-cxr"
+ROOT_DIR = "D:"
 
 tokenizer = AutoTokenizer.from_pretrained("microsoft/BiomedVLP-CXR-BERT-general")
-MAX_SEQ_LEN = 301
+
+
+# MAX_SEQ_LEN = 301
 
 
 def normalize(text):
@@ -33,7 +35,9 @@ bert.eval()
 
 
 def generate_word_embeddings_with_bert(text):
-    encoded_input = tokenizer(text, return_tensors='pt', padding='max_length', max_length=MAX_SEQ_LEN).to(device)
+    encoded_input = tokenizer(text, return_tensors='pt',
+                              # padding='max_length', max_length=MAX_SEQ_LEN
+                              ).to(device)
     with torch.no_grad():
         model_output = bert(**encoded_input)
 
