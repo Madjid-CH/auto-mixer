@@ -5,7 +5,7 @@ import torch
 from transformers import AutoTokenizer
 from transformers import BertModel
 
-ROOT_DIR = "D:"
+ROOT_DIR = "/scratch/achergui/data/mimic-cxr"
 
 tokenizer = AutoTokenizer.from_pretrained("microsoft/BiomedVLP-CXR-BERT-general")
 
