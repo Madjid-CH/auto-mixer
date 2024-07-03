@@ -1,6 +1,6 @@
 import re
 
-import pandas as pd
+import polars as pl
 import torch
 from transformers import AutoTokenizer
 from transformers import BertModel
@@ -42,7 +42,7 @@ def generate_word_embeddings_with_bert(text):
 
 
 def get_embeddings(row):
-    embeddings = generate_word_embeddings_with_bert(row.impression)
+    embeddings = generate_word_embeddings_with_bert(row)
     return embeddings.squeeze().cpu().numpy()
 
 
@@ -52,9 +52,13 @@ def extract_bert_embeddings():
     embeddings_splits_paths = ['/mimic-cxr-jpg_full_val.pkl',
                                '/mimic-cxr-jpg_full_train.pkl']
     for split_path, embeddings_split_path in zip(splits_paths, embeddings_splits_paths):
-        split = pd.read_csv(f'{ROOT_DIR}{split_path}', sep='\t')
-        split['embeddings'] = split.apply(get_embeddings, axis=1)
-        split.to_pickle(f'{ROOT_DIR}{embeddings_split_path}')
+        split = pl.scan_csv(f'{ROOT_DIR}{split_path}', separator='\t')
+        split = split.with_columns(
+            pl.col("impression").
+            map_elements(get_embeddings,
+                         return_dtype=pl.Object).alias("embeddings"),
+        )
+        split.collect().to_pandas().to_pickle(f'{ROOT_DIR}{embeddings_split_path}')
 
 
 if __name__ == '__main__':
