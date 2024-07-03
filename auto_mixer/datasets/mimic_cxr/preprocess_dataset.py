@@ -56,6 +56,7 @@ def extract_bert_embeddings():
     embeddings_splits_paths = ['/mimic-cxr-jpg_full_val.pkl',
                                '/mimic-cxr-jpg_full_train.pkl']
     for split_path, embeddings_split_path in zip(splits_paths, embeddings_splits_paths):
+        print(split_path)
         split = pl.scan_csv(f'{ROOT_DIR}{split_path}', separator='\t')
         split = split.with_columns(
             pl.col("impression").
