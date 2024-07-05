@@ -17,6 +17,7 @@ def find_architecture(datamodule: pl.LightningDataModule):
 def sample_data(dataloader):
     generator = torch.Generator().manual_seed(42)
     sample_size = 1000
+    # sample_size = calculate_sample_size(len(dataloader.train_dataloader().dataset), 1.96, 0.5, 0.05)
     train_dataloader = dataloader.train_dataloader()
     train_length = len(train_dataloader.dataset)
     sub_train_set = Subset(
@@ -26,6 +27,12 @@ def sample_data(dataloader):
     sub_train_dataloader = DataLoader(sub_train_set, batch_size=train_dataloader.batch_size,
                                       num_workers=train_dataloader.num_workers, shuffle=True, persistent_workers=True)
     return sub_train_dataloader
+
+
+def calculate_sample_size(N, z, p_hat, epsilon):
+    n = (z ** 2 * p_hat * (1 - p_hat)) / (epsilon ** 2)
+    N_prime = n / (1 + ((z ** 2 * p_hat * (1 - p_hat)) / (epsilon ** 2 * N)))
+    return N_prime
 
 
 def select_encoders(sampled_train_dataloader, val_dataloader):
