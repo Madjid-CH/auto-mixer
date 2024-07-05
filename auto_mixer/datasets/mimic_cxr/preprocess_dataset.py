@@ -6,8 +6,8 @@ import torch
 from transformers import AutoTokenizer
 from transformers import BertModel
 
-# ROOT_DIR = "/scratch/achergui/data/mimic-cxr"
-ROOT_DIR = "D:"
+ROOT_DIR = "/scratch/achergui/data/mimic-cxr"
+# ROOT_DIR = "D:"
 
 tokenizer = AutoTokenizer.from_pretrained("microsoft/BiomedVLP-CXR-BERT-general")
 
@@ -85,4 +85,5 @@ if __name__ == '__main__':
     df['study_id'] = df['study'].apply(lambda x: x.replace('s', '')).astype(int)
     df = df.merge(labels, on='study_id', how='left')
     df = df.merge(splits, on='study_id', how='left')
+    df = df.drop_duplicates(subset=['study_id'], keep=False)
     df.drop(columns=['study_id', 'findings', 'dicom_id', 'subject_id']).to_pickle(f'{ROOT_DIR}/mimic_cxr.pkl')
