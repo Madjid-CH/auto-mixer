@@ -83,7 +83,8 @@ if __name__ == '__main__':
                                'Pleural Other', 'Pneumonia', 'Pneumothorax', 'Support Devices']].values.tolist()
     labels = labels[['study_id', 'labels']]
     df['study_id'] = df['study'].apply(lambda x: x.replace('s', '')).astype(int)
-    df = df.merge(labels, on='study_id', how='left')
-    df = df.merge(splits, on='study_id', how='left')
-    df = df.drop_duplicates(subset=['study_id'], keep=False)
-    df.drop(columns=['study_id', 'findings', 'dicom_id', 'subject_id']).to_pickle(f'{ROOT_DIR}/mimic_cxr.pkl')
+    df = df.merge(labels, on='study_id', how='inner')
+    df['dicom_id'] = df.jpg_path.apply(lambda x: x.split('/')[-1].split(".")[0])
+    df = df.merge(splits, on='dicom_id', how='inner')
+    df.drop(columns=['study_id_x', 'study_id_y', 'findings', 'dicom_id', 'subject_id']).to_pickle(
+        f'{ROOT_DIR}/mimic_cxr.pkl')
