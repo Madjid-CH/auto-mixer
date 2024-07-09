@@ -50,7 +50,7 @@ class MultiLabelMultiLoss(AbstractTrainTestModule):
 
     @staticmethod
     def _build_encoders(encoders):
-        return nn.ModuleDict({k: v[1].cuda() for k, v in encoders.items()})
+        return nn.ModuleDict({k: v[1].cuda() for k, v in encoders.items()}).cuda()
 
     def shared_step(self, batch, **kwargs):
         labels = torch.tensor(batch['labels']).float().cuda()
@@ -175,6 +175,8 @@ class MultiClassMultiLoss(AbstractTrainTestModule):
         logits = {k: v.mean(dim=1) for k, v in logits.items()}
         logits = {k: self.classifiers[k](v) for k, v in logits.items()}
         fused_logits = self.classifier_fusion(fused_logits)
+        fused_logits = fused_logits + sum([v for v in logits.values()])
+        fused_logits = fused_logits / (len(self.encoders) + 1)
 
         # compute losses
         losses = {

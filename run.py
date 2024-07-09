@@ -5,14 +5,13 @@ import torch
 import wandb
 from omegaconf import OmegaConf
 
-from auto_mixer.datasets.mm_imdb.mmimdb import MMIMDBDataModule
+from auto_mixer.datasets.mimic_cxr.mimic_cxr import MIMICCXRDataModule
 from auto_mixer.runner import find_architecture
 
 
 def main():
     wandb.init(project='auto-mixer', name='test', mode='disabled')
-    data = MMIMDBDataModule(batch_size=64, num_workers=4, max_seq_len=512,
-                            dataset_cls_name="MMIMDBDatasetWithEmbeddings")
+    data = MIMICCXRDataModule(batch_size=64, num_workers=4)
     data.setup()
     fusion_function, best_model = find_architecture(data)
     cfg = OmegaConf.load("auto_mixer/cfg/train.yml")
