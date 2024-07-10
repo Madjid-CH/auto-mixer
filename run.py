@@ -10,7 +10,7 @@ from auto_mixer.runner import find_architecture
 
 
 def main():
-    wandb.init(project='auto-mixer', name='test', mode='disabled')
+    wandb.init(project='auto-mixer', name='mimic_cxr')
     data = MIMICCXRDataModule(batch_size=64, num_workers=4)
     data.setup()
     fusion_function, best_model = find_architecture(data)
