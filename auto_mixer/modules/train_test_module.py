@@ -5,7 +5,6 @@ from typing import List, Dict, Any
 import numpy as np
 import pytorch_lightning as pl
 import torch
-import wandb
 from omegaconf import DictConfig
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import Metric
@@ -49,7 +48,7 @@ class AbstractTrainTestModule(pl.LightningModule, abc.ABC):
     def on_test_end(self) -> None:
         super().on_test_end()
         test_time = time.time() - self.test_time_start
-        wandb.run.summary['test_time'] = test_time
+        self.log('test_time', test_time, on_step=False, on_epoch=False, prog_bar=False, logger=True, sync_dist=True)
 
     @abc.abstractmethod
     def setup_criterion(self) -> torch.nn.Module:
@@ -68,8 +67,8 @@ class AbstractTrainTestModule(pl.LightningModule, abc.ABC):
             trainable_parameters = sum(p.numel() for p in self.parameters() if p.requires_grad)
             total_parameters = sum(p.numel() for p in self.parameters())
 
-            wandb.run.summary['trainable_parameters'] = trainable_parameters
-            wandb.run.summary['total_parameters'] = total_parameters
+            self.log('trainable_parameters', trainable_parameters, on_step=False, on_epoch=False, prog_bar=False, )
+            self.log('total_parameters', total_parameters, on_step=False, on_epoch=False, prog_bar=False, logger=True, )
             self.logged_n_parameters = True
 
     def training_step(self, batch, batch_idx):
@@ -84,7 +83,7 @@ class AbstractTrainTestModule(pl.LightningModule, abc.ABC):
                 score = self.train_scores[metric](results['preds'].to(self.device), results['labels'].to(self.device))
                 self.log(f'train_{metric}_step', score, on_step=True, on_epoch=False, prog_bar=True, logger=True,
                          sync_dist=True)
-        wandb.log({'train_loss_step': results['loss'].cpu().item()})
+        self.log('train_loss_step', results['loss'], on_step=True, on_epoch=False, prog_bar=True, logger=True, )
         self.training_step_outputs.append(results)
         return results
 
@@ -96,9 +95,9 @@ class AbstractTrainTestModule(pl.LightningModule, abc.ABC):
         if self.train_scores is not None:
             for metric in self.train_scores:
                 train_score = self.train_scores[metric].compute()
-                wandb.log({f'train_{metric}': train_score})
                 self.log(f'train_{metric}', train_score, prog_bar=True, logger=True, sync_dist=True)
-        wandb.log({'train_loss': np.mean([output['loss'].cpu().item() for output in self.training_step_outputs])})
+        self.log('train_loss', np.mean([output['loss'].cpu().item() for output in self.training_step_outputs]),
+                 prog_bar=True, logger=True, sync_dist=True)
 
     def validation_step(self, batch, batch_idx):
         if self.val_scores is not None:
@@ -120,21 +119,21 @@ class AbstractTrainTestModule(pl.LightningModule, abc.ABC):
         if self.val_scores is not None:
             for metric in self.val_scores:
                 val_score = self.val_scores[metric].compute()
-                wandb.log({f'val_{metric}': val_score})
                 self.log(f'val_{metric}', val_score, prog_bar=True, logger=True)
         val_loss = np.mean([output['loss'].cpu().item() for output in self.validation_step_outputs])
-        wandb.log({'val_loss': val_loss})
+        self.log('val_loss', val_loss, prog_bar=True, logger=True, sync_dist=True)
+
         if self.best_epochs['val_loss'] is None or (val_loss <= self.best_epochs['val_loss'][1]):
             self.best_epochs['val_loss'] = (self.current_epoch, val_loss)
-            wandb.run.summary['best_val_loss'] = val_loss
-            wandb.run.summary['best_val_loss_epoch'] = self.current_epoch
+            self.log('best_val_loss', val_loss, prog_bar=True, logger=True, sync_dist=True)
+            self.log('best_val_loss_epoch', self.current_epoch, prog_bar=True, logger=True, sync_dist=True)
             if self.train_time_start is not None:
                 duration = time.time() - self.train_time_start
-                wandb.run.summary['best_val_loss_time'] = duration
+                self.log('best_val_loss_time', duration, prog_bar=True, logger=True, sync_dist=True)
             if self.val_scores is not None:
                 for metric in self.val_scores:
                     val_score = self.val_scores[metric].compute()
-                    wandb.run.summary[f'best_val_{metric}'] = val_score
+                    self.log(f'best_val_{metric}', val_score, prog_bar=True, logger=True, sync_dist=True)
 
     def test_step(self, batch, batch_idx):
         self.log_n_parameters()
@@ -149,16 +148,14 @@ class AbstractTrainTestModule(pl.LightningModule, abc.ABC):
         self.test_step_outputs.append(results)
         return results
 
-
     def on_test_epoch_end(self):
-        self.log_test_matrics()
+        self.log_test_metrics()
         self.test_step_outputs.clear()
 
-    def log_test_matrics(self):
+    def log_test_metrics(self):
         if self.test_scores is not None:
             for metric in self.test_scores:
                 test_score = self.test_scores[metric].compute()
-                wandb.log({f'test_{metric}': test_score})
                 self.log(f'test_{metric}', test_score, prog_bar=True, logger=True, sync_dist=True)
 
     def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> Any:
