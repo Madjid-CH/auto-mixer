@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytorch_lightning as pl
+import torch
 import torchvision.transforms as T
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
@@ -28,6 +29,7 @@ class MIMICCXR(Dataset):
         images = df['jpg_path'].values
         embeddings = df['embeddings'].values
         labels = df['labels'].values
+        labels = torch.tensor([l for l in labels])
 
         return images, embeddings, labels
 
