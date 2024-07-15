@@ -48,7 +48,8 @@ class AbstractTrainTestModule(pl.LightningModule, abc.ABC):
     def on_test_end(self) -> None:
         super().on_test_end()
         test_time = time.time() - self.test_time_start
-        self.log('test_time', test_time, on_step=False, on_epoch=False, prog_bar=False, logger=True, sync_dist=True)
+        if self.logger:
+            self.logger.experiment.add_scalar("test_time", test_time, global_step=self.current_epoch)
 
     @abc.abstractmethod
     def setup_criterion(self) -> torch.nn.Module:
