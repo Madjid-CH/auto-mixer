@@ -4,4 +4,4 @@ block_type: TextHyperMixer
 text:
   channel_dim: 1900
   num_mixers: 7
-  num_heads: 2
+  num_heads: 1
