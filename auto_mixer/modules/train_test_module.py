@@ -5,6 +5,7 @@ from typing import List, Dict, Any
 import numpy as np
 import pytorch_lightning as pl
 import torch
+import wandb
 from omegaconf import DictConfig
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import Metric
@@ -67,8 +68,8 @@ class AbstractTrainTestModule(pl.LightningModule, abc.ABC):
             trainable_parameters = sum(p.numel() for p in self.parameters() if p.requires_grad)
             total_parameters = sum(p.numel() for p in self.parameters())
 
-            self.log('trainable_parameters', trainable_parameters, on_step=False, on_epoch=False, prog_bar=False, )
-            self.log('total_parameters', total_parameters, on_step=False, on_epoch=False, prog_bar=False, logger=True, )
+            wandb.run.summary['trainable_parameters'] = trainable_parameters
+            wandb.run.summary['total_parameters'] = total_parameters
             self.logged_n_parameters = True
 
     def training_step(self, batch, batch_idx):
