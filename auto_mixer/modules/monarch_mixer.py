@@ -78,7 +78,7 @@ class MonarchMixer(nn.Module):
         Forward pass of the MonarchMixer, applies the layers in sequence.
         :param x: Input tensor of shape (b, n, d)
         """
-        x = self._trim_size_to_perfect_square(x)
+        x = self._trim_size_to_perfect_square(x.double())
         for layer in self.layers:
             x = layer(x)
         return x
