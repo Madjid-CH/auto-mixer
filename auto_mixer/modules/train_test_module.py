@@ -5,7 +5,6 @@ from typing import List, Dict, Any
 import numpy as np
 import pytorch_lightning as pl
 import torch
-import wandb
 from omegaconf import DictConfig
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import Metric
@@ -63,17 +62,8 @@ class AbstractTrainTestModule(pl.LightningModule, abc.ABC):
     def shared_step(self, batch, **kwargs) -> Dict[str, Any]:
         raise NotImplementedError
 
-    def log_n_parameters(self):
-        if not self.logged_n_parameters:
-            trainable_parameters = sum(p.numel() for p in self.parameters() if p.requires_grad)
-            total_parameters = sum(p.numel() for p in self.parameters())
-
-            wandb.run.summary['trainable_parameters'] = trainable_parameters
-            wandb.run.summary['total_parameters'] = total_parameters
-            self.logged_n_parameters = True
 
     def training_step(self, batch, batch_idx):
-        self.log_n_parameters()
         if self.train_scores is not None:
             for metric in self.train_scores:
                 self.train_scores[metric].to(self.device)
@@ -137,7 +127,6 @@ class AbstractTrainTestModule(pl.LightningModule, abc.ABC):
                     self.log(f'best_val_{metric}', val_score, prog_bar=True, logger=True, sync_dist=True)
 
     def test_step(self, batch, batch_idx):
-        self.log_n_parameters()
         if self.test_scores is not None:
             for metric in self.test_scores:
                 self.test_scores[metric].to(self.device)
