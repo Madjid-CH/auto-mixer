@@ -79,8 +79,8 @@ class MonarchMixer(nn.Module):
         :param x: Input tensor of shape (b, n, d)
         """
         x = self._trim_size_to_perfect_square(x)
-        x = x.double()
-        print(x.dtype)
+        x = x.float()
+        print(f"---------------------------{x.dtype=}------------------------")
         for layer in self.layers:
             x = layer(x)
         return x
