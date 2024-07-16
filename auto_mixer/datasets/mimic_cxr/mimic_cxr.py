@@ -42,7 +42,7 @@ class MIMICCXR(Dataset):
         label = self.labels[idx]
         embeddings = self.embeddings[idx]
         embeddings = self._pad_embeddings(embeddings)
-        sample = {'images': image, 'texts': embeddings, 'labels': label}
+        sample = {'images': image, 'texts': embeddings.astype("float"), 'labels': label}
 
         if self.transform:
             sample = self._apply_transformation(sample)
