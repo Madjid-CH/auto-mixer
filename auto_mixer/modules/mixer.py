@@ -39,6 +39,7 @@ class MixerBlock(nn.Module):
         )
 
     def forward(self, x):
+        x = x.float()
         x = x + self.token_mix(x)
 
         x = x + self.channel_mix(x)
