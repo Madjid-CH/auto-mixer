@@ -37,8 +37,8 @@ class MultiLabelMultiLoss(AbstractTrainTestModule):
 
     def _build_classifiers(self, target_length):
         with torch.no_grad():
-            input_dims = {"images": self.encoders["images"](torch.rand(1, 3, 256, 256).cuda()),
-                          "texts": self.encoders["texts"](torch.rand(1, 512, 768).cuda())}
+            input_dims = {"images": self.encoders["images"](torch.rand(1, 3, 224, 224).cuda()),
+                          "texts": self.encoders["texts"](torch.rand(1, 301, 768).cuda())}
         self._classifier_input_dim = max(v.shape[-1] for v in input_dims.values())
         print(f"{self._classifier_input_dim=}")
         input_dims = {k: v.shape[-1] for k, v in input_dims.items()}
