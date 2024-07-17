@@ -411,6 +411,7 @@ class TextHyperMixer(nn.Module):
         self.layer_norm = nn.LayerNorm(hidden_dim)
 
     def forward(self, x):
+        x = x.float()
         for mixer_block in self.mixer_blocks:
             x = mixer_block(x)
         x = self.layer_norm(x)
