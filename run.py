@@ -2,26 +2,25 @@ import importlib
 
 import pytorch_lightning as pl
 import torch
+import wandb
 from omegaconf import OmegaConf
-from pytorch_lightning.loggers import WandbLogger
 
 from auto_mixer.datasets.mimic_cxr.mimic_cxr import MIMICCXRDataModule
 from auto_mixer.runner import find_architecture
 
 
 def main():
+    wandb.init(project='auto-mixer', name='mimic_cxr')
     data = MIMICCXRDataModule(batch_size=64, num_workers=4)
     data.setup()
     fusion_function, best_model = find_architecture(data)
     cfg = OmegaConf.load("auto_mixer/cfg/train.yml")
-    wandb_logger = WandbLogger(project='auto-mixer', name='mimic_cxr')
-    wandb_logger.experiment.config.update(cfg)
     callbacks = build_callbacks(cfg.callbacks)
     trainer = pl.Trainer(
         callbacks=callbacks,
         devices=torch.cuda.device_count(),
         log_every_n_steps=cfg.log_interval_steps,
-        logger=wandb_logger,
+        logger=pl.loggers.TensorBoardLogger(cfg.tensorboard_path, "pipeline"),
         max_epochs=cfg.epochs
     )
 

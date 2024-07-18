@@ -1,4 +1,5 @@
 import torch
+import wandb
 from omegaconf import DictConfig
 from torch import nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau
@@ -98,7 +99,7 @@ class MultiLabelMultiLoss(AbstractTrainTestModule):
     def on_train_epoch_end(self) -> None:
         self.log_training_metrics()
         for k in self.encoders.keys():
-            self.log(
+            wandb.log(
                 {f'train_loss_{k}': torch.stack([x['losses'][k] for x in self.training_step_outputs]).mean().item()})
         self.log('train_loss_fusion', torch.stack([x['loss'] for x in self.training_step_outputs]).mean().item(),
                  sync_dist=True)
@@ -108,6 +109,7 @@ class MultiLabelMultiLoss(AbstractTrainTestModule):
         self.log_validation_metrics()
         val_loss_fusion = torch.stack([x['loss'] for x in self.validation_step_outputs]).mean().item()
         self.log('val_loss_fusion', val_loss_fusion, sync_dist=True)
+        wandb.log({'val_loss_fusion': val_loss_fusion})
         if self.current_epoch >= self.loss_change_epoch:
             self.fusion_loss_weight = min(1, self.fusion_loss_weight + self.fusion_loss_change)
         self.validation_step_outputs.clear()
@@ -206,7 +208,7 @@ class MultiClassMultiLoss(AbstractTrainTestModule):
     def on_train_epoch_end(self) -> None:
         super().on_train_epoch_end()
         for k in self.encoders.keys():
-            self.log(
+            wandb.log(
                 {f'train_loss_{k}': torch.stack([x['losses'][k] for x in self.training_step_outputs]).mean().item()})
         self.log('train_loss_fusion', torch.stack([x['loss_fusion'] for x in self.training_step_outputs]).mean().item(),
                  sync_dist=True)
@@ -215,6 +217,7 @@ class MultiClassMultiLoss(AbstractTrainTestModule):
         super().validation_epoch_end()
         val_loss_fusion = torch.stack([x['loss_fusion'] for x in self.validation_step_outputs]).mean().item()
         self.log('val_loss_fusion', val_loss_fusion, sync_dist=True)
+        wandb.log({'val_loss_fusion': val_loss_fusion})
         if self.current_epoch >= self.loss_change_epoch:
             self.fusion_loss_weight = min(1, self.fusion_loss_weight + self.fusion_loss_change)
 
