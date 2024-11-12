@@ -83,7 +83,7 @@ information about the patient. The train, validation and test
 splits are 26093, 3261 and 3261 respectively.
 ![mimic.png](images/mimic.png)
 
-## Hyperparameters
+## Experiments and results
 
 We compare MixMAS's performance against M2-Mixer. The hyperparameters of M2-Mixer are as follows:
 
@@ -96,3 +96,6 @@ We compare MixMAS's performance against M2-Mixer. The hyperparameters of M2-Mixe
 All the blocks in the M2-Mixer are MLP-Mixer blocks.
 For MixMAS,
 the hyperparameters are the same except for the type of the blocks that will be selected during the micro benchmarking.
+
+The final results are summarized in the chart below:
+![chart.png](images/chart.png)
