@@ -138,7 +138,7 @@ class MLPMixer(nn.Module):
         super().__init__()
 
         assert (image_size[0] % patch_size == 0) and (
-                image_size[1] % patch_size == 0), 'Image dimensions must be divisible by the patch size.'
+                image_size[1] % patch_size == 0), f'Image dimensions must be divisible by the patch size. Got {image_size[0]} and {image_size[1]} for image size and {patch_size} for patch size.'
         self.num_patch = (image_size[0] // patch_size) * (image_size[1] // patch_size)
         self.hidden_dim = hidden_dim
         self.to_patch_embedding = nn.Sequential(
@@ -154,6 +154,8 @@ class MLPMixer(nn.Module):
         self.layer_norm = nn.LayerNorm(hidden_dim)
 
     def forward(self, x):
+        if x.device != self.to_patch_embedding[0].weight.device:
+            self.to_patch_embedding.to(x.device)
         x = self.to_patch_embedding(x)
 
         for mixer_block in self.mixer_blocks:

@@ -149,7 +149,7 @@ class MultiClassMultiLoss(AbstractTrainTestModule):
         self.fusion_mixer = modules.get_block_by_name(**multimodal_config, num_patches=num_patches, dropout=dropout)
         self.classifiers = {k: torch.nn.Linear(v.hidden_dim, target_length)
                             for k, v in self.encoders.items()}
-        self.classifier_fusion = StandardClassifier(input_shape=(16, 49, 256), num_classes=target_length)
+        self.classifier_fusion = StandardClassifier(input_shape=(16, 49, 512), num_classes=target_length)
 
         self.criteria = {k: nn.CrossEntropyLoss() for k in self.encoders.keys()}
         self.fusion_criterion = nn.CrossEntropyLoss()
@@ -173,6 +173,8 @@ class MultiClassMultiLoss(AbstractTrainTestModule):
 
         logits = {k: v.reshape(v.shape[0], -1, v.shape[-1]) for k, v in logits.items()}
         logits = {k: v.mean(dim=1) for k, v in logits.items()}
+        for k in logits.keys():
+            self.classifiers[k].to(logits[k].device)
         logits = {k: self.classifiers[k](v) for k, v in logits.items()}
         fused_logits = self.classifier_fusion(fused_logits)
         fused_logits = fused_logits + sum([v for v in logits.values()])
@@ -180,7 +182,7 @@ class MultiClassMultiLoss(AbstractTrainTestModule):
 
         # compute losses
         losses = {
-            k: self.criteria[k](v, labels) for k, v in logits.items()
+            k: self.criteria[k](v, labels.long()) for k, v in logits.items()
         }
 
         loss = self._compute_multi_loss(fused_logits, labels, losses)
@@ -192,13 +194,13 @@ class MultiClassMultiLoss(AbstractTrainTestModule):
             'preds': preds,
             'modalities_preds': modalities_preds,
             'labels': labels,
-            'loss_fusion': loss,
+            'loss': loss,
             'losses': losses,
             'logits': logits
         }
 
     def _compute_multi_loss(self, fused_logits, labels, losses):
-        loss_fusion = self.fusion_criterion(fused_logits, labels)
+        loss_fusion = self.fusion_criterion(fused_logits, labels.long())
         loss = self.fusion_loss_weight * loss_fusion
         ow = (1 - self.fusion_loss_weight) / len(self.encoders)
         loss += sum([ow * v for v in losses.values()])
@@ -206,20 +208,22 @@ class MultiClassMultiLoss(AbstractTrainTestModule):
         return loss
 
     def on_train_epoch_end(self) -> None:
-        super().on_train_epoch_end()
+        self.log_training_metrics()
         for k in self.encoders.keys():
             wandb.log(
                 {f'train_loss_{k}': torch.stack([x['losses'][k] for x in self.training_step_outputs]).mean().item()})
-        self.log('train_loss_fusion', torch.stack([x['loss_fusion'] for x in self.training_step_outputs]).mean().item(),
+        self.log('train_loss_fusion', torch.stack([x['loss'] for x in self.training_step_outputs]).mean().item(),
                  sync_dist=True)
+        self.training_step_outputs.clear()
 
     def on_validation_epoch_end(self, ) -> None:
-        super().validation_epoch_end()
-        val_loss_fusion = torch.stack([x['loss_fusion'] for x in self.validation_step_outputs]).mean().item()
+        self.log_validation_metrics()
+        val_loss_fusion = torch.stack([x['loss'] for x in self.validation_step_outputs]).mean().item()
         self.log('val_loss_fusion', val_loss_fusion, sync_dist=True)
         wandb.log({'val_loss_fusion': val_loss_fusion})
         if self.current_epoch >= self.loss_change_epoch:
             self.fusion_loss_weight = min(1, self.fusion_loss_weight + self.fusion_loss_change)
+        self.validation_step_outputs.clear()
 
     def setup_criterion(self) -> None:
         return None

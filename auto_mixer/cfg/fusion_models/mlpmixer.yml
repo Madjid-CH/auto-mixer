@@ -11,3 +11,4 @@ multimodal:
   num_modality: 2
   proj_modality_dim: 16
   modality_dim: 64
+  hidden_dim: 512

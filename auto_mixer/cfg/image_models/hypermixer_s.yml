@@ -1,10 +1,11 @@
 #21.3m
 dropout: 0.1
 block_type: HyperMixer
+classifier_input_dim: 128
 image:
-  in_channels: 3
-  hidden_dim: 512
-  patch_size: 16
-  channel_dim: 2048
-  num_mixers: 9
-  num_heads: 2
+  in_channels: 1
+  hidden_dim: 128
+  patch_size: 14
+  channel_dim: 3072
+  num_mixers: 4
+  num_heads: 1

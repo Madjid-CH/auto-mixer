@@ -41,7 +41,6 @@ class ConcatFusion:
 
 
 def pad_tensors_on_third_dim(args):
-    print([arg.shape for arg in args])
     max_size = max(arg.size(2) for arg in args)
     padded_tensors = []
     for tensor in args:

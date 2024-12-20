@@ -8,3 +8,4 @@ multimodal:
   channel_dim: 3072
   num_mixers: 4
   num_heads: 1
+  hidden_dim: 512

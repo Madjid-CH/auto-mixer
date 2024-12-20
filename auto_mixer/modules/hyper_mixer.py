@@ -34,6 +34,8 @@ class HyperMixer(nn.Module):
         self.layer_norm = nn.LayerNorm(hidden_dim)
 
     def forward(self, x):
+        if x.device != self.to_patch_embedding[0].weight.device:
+            self.to_patch_embedding.to(x.device)
         x = self.to_patch_embedding(x)
 
         for mixer_block in self.mixer_blocks:
@@ -66,6 +68,7 @@ class HyperMixerBlock(nn.Module):
         )
 
     def forward(self, x):
+        self.to(x.device)
         x1 = self.token_mix(x) + x
         return self.feature_mix(x1) + x
 

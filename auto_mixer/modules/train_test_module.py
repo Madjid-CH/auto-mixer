@@ -69,19 +69,19 @@ class AbstractTrainTestModule(pl.LightningModule, abc.ABC):
             for metric in self.train_scores:
                 self.train_scores[metric].to(self.device)
         results = self.shared_step(batch, mode='train')
-        self.log('', results['loss'], on_step=True, on_epoch=True, prog_bar=True, logger=True, sync_dist=True)
+        f = 'loss' if 'loss' in results else 'loss_fusion'
+        self.log('', results[f], on_step=True, on_epoch=True, prog_bar=True, logger=True, sync_dist=True)
         if self.train_scores is not None:
             for metric in self.train_scores:
                 score = self.train_scores[metric](results['preds'].to(self.device), results['labels'].to(self.device))
                 self.log(f'train_{metric}_step', score, on_step=True, on_epoch=False, prog_bar=True, logger=True,
                          sync_dist=True)
-        self.log('train_loss_step', results['loss'], on_step=True, on_epoch=False, prog_bar=True, logger=True, )
+        self.log('train_loss_step', results[f], on_step=True, on_epoch=False, prog_bar=True, logger=True, )
         self.training_step_outputs.append(results)
         return results
 
     def on_train_epoch_end(self):
         self.log_training_metrics()
-        self.training_step_outputs.clear()
 
     def log_training_metrics(self):
         if self.train_scores is not None:
@@ -96,7 +96,8 @@ class AbstractTrainTestModule(pl.LightningModule, abc.ABC):
             for metric in self.val_scores:
                 self.val_scores[metric].to(self.device)
         results = self.shared_step(batch, mode='val')
-        self.log('val_loss', results['loss'], on_step=False, on_epoch=True, prog_bar=True, logger=True, sync_dist=True)
+        r = 'loss' if 'loss' in results else 'loss_fusion'
+        self.log('val_loss', results[r], on_step=False, on_epoch=True, prog_bar=True, logger=True, sync_dist=True)
         if self.val_scores is not None:
             for metric in self.val_scores:
                 self.val_scores[metric](results['preds'].to(self.device), results['labels'].to(self.device))
@@ -105,14 +106,14 @@ class AbstractTrainTestModule(pl.LightningModule, abc.ABC):
 
     def on_validation_epoch_end(self):
         self.log_validation_metrics()
-        self.validation_step_outputs.clear()
 
     def log_validation_metrics(self):
         if self.val_scores is not None:
             for metric in self.val_scores:
                 val_score = self.val_scores[metric].compute()
                 self.log(f'val_{metric}', val_score, prog_bar=True, logger=True)
-        val_loss = np.mean([output['loss'].cpu().item() for output in self.validation_step_outputs])
+        f = 'loss' if 'loss' in self.validation_step_outputs[0] else 'loss_fusion'
+        val_loss = np.mean([output[f].cpu().item() for output in self.validation_step_outputs])
         self.log('val_loss', val_loss, prog_bar=True, logger=True, sync_dist=True)
 
         if self.best_epochs['val_loss'] is None or (val_loss <= self.best_epochs['val_loss'][1]):

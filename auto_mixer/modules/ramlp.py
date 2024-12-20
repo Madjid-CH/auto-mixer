@@ -1,3 +1,5 @@
+import math
+
 import torch
 import torch.nn as nn
 from einops import rearrange
@@ -19,12 +21,16 @@ class Downsampling(nn.Module):
         self.post_norm = post_norm(out_channels, eps=1e-6) if post_norm else nn.Identity()
 
     def forward(self, x):
+        self.pre_norm.to(x.device)
         x = self.pre_norm(x)
         # if you take [B, H, W, C] as input, permute it to [B, C, H, W]
         if self.pre_permute:
             x = x.permute(0, 3, 1, 2).contiguous()
+        if x.device != self.conv.weight.device:
+            self.conv.to(x.device)
         x = self.conv(x)
         x = x.permute(0, 2, 3, 1).contiguous()  # [B, C, H, W] -> [B, H, W, C]
+        self.post_norm.to(x.device)
         x = self.post_norm(x)
         return x
 
@@ -125,6 +131,8 @@ class RaBlock(nn.Module):
         self.res_scale2 = Scale(dim=dim, init_value=res_scale_init_value) if res_scale_init_value else nn.Identity()
 
     def forward(self, x):
+        self.to(x.device)
+        self.cpe.to(x.device)
         x = x + self.cpe(x.permute(0, 3, 1, 2).contiguous()).permute(0, 2, 3, 1).contiguous()
         x = self.res_scale1(x) + self.drop_path1(self.token_mixer(self.norm1(x)))
         x = self.res_scale2(x) + self.drop_path2(self.mlp(self.norm2(x)))
@@ -150,6 +158,7 @@ class RaMLP(nn.Module):
                  kernel_size=(8, 4, 2, 1),
                  head_dims=(1, 4, 16, 64),
                  drop_path_rate=0.,
+                 image_size=(28, 28),
                  res_scale_init_values=(None, None, 1.0, 1.0),
                  **_kwargs
                  ):
@@ -159,12 +168,17 @@ class RaMLP(nn.Module):
 
         self.down_0 = Downsampling(in_channels, dims[0], kernel_size=7, stride=4, padding=2, post_norm=nn.LayerNorm,
                                    pre_permute=False)
+        self.num_patch = math.floor((image_size[0] + 2*2 - 7) / 4 + 1)
         self.down_1 = Downsampling(dims[0], dims[1], kernel_size=3, stride=2, padding=1, pre_norm=nn.LayerNorm,
                                    pre_permute=True)
+        self.num_patch = math.floor((self.num_patch + 2*1 - 3) / 2 + 1)
         self.down_2 = Downsampling(dims[1], dims[2], kernel_size=3, stride=2, padding=1, pre_norm=nn.LayerNorm,
                                    pre_permute=True)
+        self.num_patch = math.floor((self.num_patch + 2*1 - 3) / 2 + 1)
         self.down_3 = Downsampling(dims[2], dims[3], kernel_size=3, stride=2, padding=1, pre_norm=nn.LayerNorm,
                                    pre_permute=True)
+        self.num_patch = math.floor((self.num_patch + 2*1 - 3) / 2 + 1)
+        self.hidden_dim = dims[-1]
 
         dp_rates = [x.item() for x in torch.linspace(0, drop_path_rate, sum(depths))]
 
@@ -196,6 +210,7 @@ class RaMLP(nn.Module):
         return {'norm'}
 
     def forward(self, x):
+        self.to(x.device)
         x = self.down_0(x)
         x = self.stages[0](x)
 

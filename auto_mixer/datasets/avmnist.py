@@ -16,9 +16,9 @@ class ToTensor(object):
         tensor_dict = {}
         if sample.get('audio') is not None:
             tensor_dict['audio'] = torch.from_numpy(sample['audio'].astype(np.float32))
-        if sample.get('image') is not None:
-            tensor_dict['image'] = torch.from_numpy(sample['image'].astype(np.float32))
-        tensor_dict['label'] = int(sample['label'])
+        if sample.get('images') is not None:
+            tensor_dict['images'] = torch.from_numpy(sample['images'].astype(np.float32))
+        tensor_dict['labels'] = int(sample['labels'])
 
         return tensor_dict
 
@@ -33,10 +33,10 @@ class Normalize(object):
         tensor_dict = {}
         if sample.get('audio') is not None:
             tensor_dict['audio'] = sample['audio']
-        if sample.get('image') is not None:
-            image = self._normalize(sample['image'], mean=self.mean_vector, std=self.std_devs)
-            tensor_dict['image'] = image
-        tensor_dict['label'] = int(sample['label'])
+        if sample.get('images') is not None:
+            image = self._normalize(sample['images'], mean=self.mean_vector, std=self.std_devs)
+            tensor_dict['images'] = image
+        tensor_dict['labels'] = int(sample['labels'])
 
         return tensor_dict
 
@@ -70,17 +70,17 @@ class RandomModalityMuting(object):
     def __call__(self, sample):
         rval = random.random()
 
-        im = sample['image']
+        im = sample['images']
         au = sample['audio']
         if rval <= self.p_muting:
             vval = random.random()
 
             if vval <= 0.5:
-                im = sample['image'] * 0
+                im = sample['images'] * 0
             else:
                 au = sample['audio'] * 0
 
-        return {'image': im, 'audio': au, 'label': sample['label']}
+        return {'images': im, 'audio': au, 'labels': sample['labels']}
 
 
 # %%
@@ -114,7 +114,7 @@ class AVMnist(Dataset):
             self.mnist_data = self.mnist_data.reshape(self.mnist_data.shape[0], 1, 28, 28)
         else:
             if modal:
-                if modal not in ['audio', 'image']:
+                if modal not in ['audio', 'images']:
                     raise ValueError('the value of modal is allowed')
 
                 if stage == 'train':
@@ -126,7 +126,7 @@ class AVMnist(Dataset):
 
                 if modal == 'audio':
                     self.data = self.data[:, np.newaxis, :, :]
-                elif modal == 'image':
+                elif modal == 'images':
                     self.data = self.data.reshape(self.data.shape[0], 1, 28, 28)
 
             else:
@@ -141,12 +141,12 @@ class AVMnist(Dataset):
             audio = self.audio_data[idx]
             label = self.labels[idx]
 
-            sample = {'image': image, 'audio': audio, 'label': label}
+            sample = {'images': image, 'audio': audio, 'labels': label}
         else:
             data = self.data[idx]
             label = self.labels[idx]
 
-            sample = {self.modal: data, 'label': label}
+            sample = {self.modal: data, 'labels': label}
 
         if self.transform:
             sample = self.transform(sample)
@@ -162,6 +162,7 @@ class AVMnistDataModule(pl.LightningDataModule):
         self.data_dir = data_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.target_length = 10
 
     def setup(self, stage: str = None):
         # transform = T.Compose([ToTensor(), RandomModalityMuting(p_muting=self.p_muting)])
@@ -201,7 +202,7 @@ class AVMnistIntermediate(Dataset):
             self.image_labels = np.load(os.path.join(root_dir, stage + '/image_corrects.npy'))
             self.audio_labels = np.load(os.path.join(root_dir, stage + '/audio_corrects.npy'))
             self.fusion_labels = np.load(os.path.join(root_dir, stage + '/fusion_corrects.npy'))
-        elif modality in ('image', 'audio', 'fusion'):
+        elif modality in ('images', 'audio', 'fusion'):
             self.data = np.load(os.path.join(root_dir, stage + '/' + modality + '_vectors.npy'))
             self.labels = np.load(os.path.join(root_dir, stage + '/' + modality + '_corrects.npy'))
         else:
@@ -217,7 +218,7 @@ class AVMnistIntermediate(Dataset):
         if hasattr(self, 'data'):
             data = self.data[idx]
             label = self.labels[idx]
-            sample = {'data': data, 'label': label}
+            sample = {'data': data, 'labels': label}
         else:
             image = self.data_image[idx]
             audio = self.data_audio[idx]
@@ -226,7 +227,7 @@ class AVMnistIntermediate(Dataset):
             audio_label = self.audio_labels[idx]
             fusion_label = self.fusion_labels[idx]
 
-            sample = {'image': image, 'audio': audio, 'fusion': fusion,
+            sample = {'images': image, 'audio': audio, 'fusion': fusion,
                       'image_label': image_label, 'audio_label': audio_label, 'fusion_label': fusion_label}
 
         return sample

@@ -5,13 +5,13 @@ import torch
 import wandb
 from omegaconf import OmegaConf
 
-from auto_mixer.datasets.mimic_cxr.mimic_cxr import MIMICCXRDataModule
+from auto_mixer.datasets.avmnist import AVMnistDataModule
 from auto_mixer.runner import find_architecture
 
 
 def main():
-    wandb.init(project='auto-mixer', name='mimic_cxr')
-    data = MIMICCXRDataModule(batch_size=64, num_workers=4)
+    wandb.init(project='auto-mixer', name='avmnist')
+    data = AVMnistDataModule(batch_size=64, num_workers=4, data_dir='../data/avmnist_orig/avmnist')
     data.setup()
     fusion_function, best_model = find_architecture(data)
     cfg = OmegaConf.load("auto_mixer/cfg/train.yml")

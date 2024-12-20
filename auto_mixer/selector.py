@@ -5,6 +5,7 @@ import torch
 from omegaconf import OmegaConf
 
 from auto_mixer.models import MulticlassImageMixer, MultilabelImageMixer, MulticlassTextMixer, MultilabelTextMixer
+from auto_mixer.models.audio_models import MulticlassAudioMixer, MultilabelAudioMixer
 from auto_mixer.models.multimodal_models import MultiClassMultiLoss, MultiLabelMultiLoss
 
 
@@ -55,6 +56,15 @@ def get_image_model_for(task):
         raise ValueError(f"Unknown task: {task}")
 
 
+def get_audio_model_for(task):
+    if task == "multiclass":
+        return MulticlassAudioMixer
+    elif task == "multilabel":
+        return MultilabelAudioMixer
+    else:
+        raise ValueError(f"Unknown task: {task}")
+
+
 def select_text_encoder(task, train_dataloader, val_dataloader):
     cfgs_path = "auto_mixer/cfg/text_models"
     modules_configs_files = os.listdir(cfgs_path)
@@ -72,6 +82,23 @@ def select_text_encoder(task, train_dataloader, val_dataloader):
     return benchmark(models, train_cfg, train_dataloader, val_dataloader)
 
 
+def select_audio_encoder(task, train_dataloader, val_dataloader):
+    cfgs_path = "auto_mixer/cfg/audio_models"
+    modules_configs_files = os.listdir(cfgs_path)
+    cfgs = [OmegaConf.load(f"{cfgs_path}/{cfg_file}") for cfg_file in modules_configs_files]
+    Mixer = get_audio_model_for(task)
+    image_size = train_dataloader.dataset[0]['audio'].shape[1:]
+    train_cfg = OmegaConf.load("auto_mixer/cfg/micro_train.yml")
+    models = {
+        cfg.block_type: Mixer(image_size=image_size,
+                              target_length=train_dataloader.target_length,
+                              model_cfg=cfg,
+                              optimizer_cfg=train_cfg.optimizer
+                              ) for cfg in cfgs
+    }
+    return benchmark(models, train_cfg, train_dataloader, val_dataloader)
+
+
 def get_text_model_for(task):
     if task == "multiclass":
         return MulticlassTextMixer
@@ -84,6 +111,7 @@ def get_text_model_for(task):
 selectors = {
     'images': select_image_encoder,
     'texts': select_text_encoder,
+    'audio': select_audio_encoder
 }
 
 
@@ -93,7 +121,10 @@ def select_fusion_strategy(encoders, train_dataloader, val_dataloader):
     cfgs = [OmegaConf.load(f"{cfgs_path}/{cfg_file}") for cfg_file in modules_configs_files]
     train_cfg = OmegaConf.load("auto_mixer/cfg/micro_train.yml")
     sample = train_dataloader.dataset[0]
-    task = "multiclass" if len(sample['labels']) == 1 else "multilabel"
+    try:
+        task = "multiclass" if len(sample['labels']) == 1 else "multilabel"
+    except TypeError:
+        task = "multiclass"
     Mixer = get_multimodal_model_for(task)
     models = {
         cfg.multimodal.block_type: Mixer(
